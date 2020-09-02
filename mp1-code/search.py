@@ -50,6 +50,17 @@ def bfs(maze):
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
     # TODO: Write your code here
+    #queue holds the nodes youre looking at, visited is whethere or not the node has been looked at
+    #use () for tuples
+    queue = []
+    visited = []
+    queue.append(maze.getStart())
+
+    while queue != []:
+        queue.pop(0)
+
+
+
     return []
 
 

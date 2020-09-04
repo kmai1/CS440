@@ -38,6 +38,7 @@ def bfs(maze):
     # TODO: Write your code here
     # queue holds the nodes youre looking at, visited is whethere or not the node has been looked at
     # use () for tuples
+
     queue = []
     visited = []
     connections = {}
@@ -61,6 +62,13 @@ def bfs(maze):
         visited.append(current)
     return []
 
+from queue import PriorityQueue
+
+def heuristics(currNode, endNode):
+    return abs(endNode[0] - currNode[0]) + abs(endNode[1] - currNode[1])
+
+# f = g + h, f = cost, g = dist from start to curr, h = dist from curr to end
+
 def astar(maze):
     """
     Runs A star for part 1 of the assignment.
@@ -70,6 +78,32 @@ def astar(maze):
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
     # TODO: Write your code here
+    #priority queue ordered by dist from start
+    # get returns the tuple soted in the top of the queue
+    queue = PriorityQueue()
+    done = []
+    totalCost = {}
+    totalCost[maze.getStart()] = 0 + heuristics(maze.getStart(), maze.getObjectives()[0])
+    distFromStart = {}
+    distFromStart[maze.getStart()] = 0
+
+    queue.put(maze.getStart(), 0)
+    while queue != []:
+        # get ??? pop ??
+        current = queue.get()
+        if current in done:
+            queue.put(current)
+            continue
+        if current in maze.getObjectives():
+            # return pathway
+
+            return []
+        for neighbors in maze.getNeighbors(current[0], current[1]):
+            distFromStart[neighbors] = distFromStart[current] + 1
+            totalCost[neighbors] = distFromStart[neighbors] + heuristics(neighbors, maze.getObjectives()[0])
+            queue.put(neighbors, totalCost[neighbors])
+
+        done.append(current)
     return []
 
 def astar_corner(maze):
@@ -79,7 +113,7 @@ def astar_corner(maze):
     @param maze: The maze to execute the search on.
 
     @return path: a list of tuples containing the coordinates of each state in the computed path
-        """
+    """
     # TODO: Write your code here
     return []
 

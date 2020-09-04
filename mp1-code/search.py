@@ -36,22 +36,30 @@ def bfs(maze):
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
     # TODO: Write your code here
-    #queue holds the nodes youre looking at, visited is whethere or not the node has been looked at
-    #use () for tuples
+    # queue holds the nodes youre looking at, visited is whethere or not the node has been looked at
+    # use () for tuples
     queue = []
-    queue.append([maze.getStart()])
-
+    visited = []
+    connections = {}
+    queue.append(maze.getStart())
     while queue != []:
-        currentList = queue.pop(0)
-        if currentList[-1] in maze.getObjectives():
-            return currentList
-        else:
-            for neighbors in maze.getNeighbors(currentList[-1][0], currentList[-1][1]):
-                nextList = list(currentList)
-                nextList.append(neighbors)
-                queue.append(nextList)
+        current = queue.pop(0)
+        if current in visited:
+            continue
+        if current in maze.getObjectives():
+            answer = [current]
+            while answer[-1] != maze.getStart():
+                answer.append(connections[answer[-1]])
+            answer.reverse()
+            return answer
+        for neighbors in maze.getNeighbors(current[0], current[1]):
+            # prevents double up that infinite loops
+            if neighbors in connections:
+                continue
+            connections[neighbors] = current
+            queue.append(neighbors)
+        visited.append(current)
     return []
-
 
 def astar(maze):
     """

@@ -27,6 +27,22 @@ def search(maze, searchMethod):
         "fast": fast,
     }.get(searchMethod)(maze)
 
+def backtrace(connections, start, end):
+    answer = [end]
+    while answer[-1] != start:
+        answer.append(connections[answer[-1]])
+    answer.reverse()
+    return answer
+
+# dist from end to start, # of "edges"
+def length_backtrace(connections, start, end):
+    answer = [end]
+    length = 0
+    while answer[-1] != start:
+        answer.append(connections[answer[-1]])
+        length+= 1
+    answer.reverse()
+    return length
 def bfs(maze):
     """
     Runs BFS for part 1 of the assignment.
@@ -48,11 +64,7 @@ def bfs(maze):
         if current in visited:
             continue
         if current in maze.getObjectives():
-            answer = [current]
-            while answer[-1] != maze.getStart():
-                answer.append(connections[answer[-1]])
-            answer.reverse()
-            return answer
+            return backtrace(connections, maze.getStart(), current)
         for neighbors in maze.getNeighbors(current[0], current[1]):
             # prevents double up that infinite loops
             if neighbors in connections:
@@ -62,12 +74,44 @@ def bfs(maze):
         visited.append(current)
     return []
 
-from queue import PriorityQueue
+import heapq
 
+#aapproximaate dist from endnode
 def heuristics(currNode, endNode):
     return abs(endNode[0] - currNode[0]) + abs(endNode[1] - currNode[1])
 
 # f = g + h, f = cost, g = dist from start to curr, h = dist from curr to end
+
+def astarBetter(maze, startNode, endNode):
+    endPoint = endNode
+    startPoint = startNode
+    queue = []
+    done = []
+    totalCost = {}
+    connections = {}
+    totalCost[startPoint] = length_backtrace(connections, startPoint, startPoint) + heuristics(startPoint, endPoint)
+    # cost first element second
+    heapq.heappush(queue, ((totalCost[startPoint]), startPoint))
+
+    while queue != []:
+        current = heapq.heappop(queue)
+
+        if current in done:
+            queue.put(current)
+            continue
+        if current[1] == endPoint:
+            return backtrace(connections, startPoint, current[1])
+
+        for neighbors in maze.getNeighbors(current[1][0], current[1][1]):
+            # might need a check connections cost
+            # if lookingnodecost < totalCost[neighbors], update connection here so you can have the most optimal path?
+            if neighbors in connections:
+                continue
+            connections[neighbors] = current[1]
+            totalCost[neighbors] = length_backtrace(connections, startPoint, current[1]) + 1 + heuristics(neighbors, endPoint)
+            heapq.heappush(queue, (totalCost[neighbors], neighbors))
+        done.append(current[1])
+    return []
 
 def astar(maze):
     """
@@ -78,33 +122,7 @@ def astar(maze):
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
     # TODO: Write your code here
-    #priority queue ordered by dist from start
-    # get returns the tuple soted in the top of the queue
-    queue = PriorityQueue()
-    done = []
-    totalCost = {}
-    totalCost[maze.getStart()] = 0 + heuristics(maze.getStart(), maze.getObjectives()[0])
-    distFromStart = {}
-    distFromStart[maze.getStart()] = 0
-
-    queue.put(maze.getStart(), 0)
-    while queue != []:
-        # get ??? pop ??
-        current = queue.get()
-        if current in done:
-            queue.put(current)
-            continue
-        if current in maze.getObjectives():
-            # return pathway
-
-            return []
-        for neighbors in maze.getNeighbors(current[0], current[1]):
-            distFromStart[neighbors] = distFromStart[current] + 1
-            totalCost[neighbors] = distFromStart[neighbors] + heuristics(neighbors, maze.getObjectives()[0])
-            queue.put(neighbors, totalCost[neighbors])
-
-        done.append(current)
-    return []
+    return astarBetter(maze, maze.getStart(), maze.getObjectives()[0])
 
 def astar_corner(maze):
     """
@@ -115,7 +133,38 @@ def astar_corner(maze):
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
     # TODO: Write your code here
-    return []
+    finalPath = []
+    dotsOrderQueue = []
+    # dont go in order of dots, traverse through order of cost of dots?
+    dotsList = maze.getObjectives()
+    #print(dotsList)
+    flag2 = True
+
+    while dotsList != []:
+        tempDots = dotsList[0]
+        if flag2:
+            startNode = maze.getStart()
+            flag2 = False
+        else:
+            startNode = dotsOrderQueue[-1]
+        for dots in dotsList:
+            if (len(astarBetter(maze, startNode, dots)) < len(astarBetter(maze, startNode, tempDots))):
+                tempDots = dots
+        dotsOrderQueue.append(tempDots)
+        #print(tempDots)
+        dotsList.remove(tempDots)
+        #print(dotsList)
+    
+    counter = 0
+    flag = True
+    for end in dotsOrderQueue:
+        if flag:
+            finalPath =  astarBetter(maze, maze.getStart(), end)
+            flag = False
+            continue
+        finalPath += astarBetter(maze, dotsOrderQueue[counter], end)
+        counter+=1
+    return finalPath
 
 def astar_multi(maze):
     """
@@ -127,7 +176,7 @@ def astar_multi(maze):
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
     # TODO: Write your code here
-    return []
+    return astar_corner(maze)
 
 
 def fast(maze):

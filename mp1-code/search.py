@@ -113,6 +113,29 @@ def astarBetter(maze, startNode, endNode):
         done.append(current[1])
     return []
 
+def MST_prims(maze):
+    dots = maze.getObjectives()
+    connections = {}
+    queue = []
+
+    heapq.heappush(queue, (0, maze.getStart()))
+
+    while queue != []:
+        current = heapq.heappop(queue)
+        print("current ",current[1])
+        #end condition bc this creates a cycle?
+        if len(connections) == (len(maze.getObjectives()) - 1 ):
+            return backtrace(connections, maze.getObjectives()[-1], maze.getStart())
+            break
+
+        for neighbors in maze.getObjectives():
+            heapq.heappush(queue, (len(astarBetter(maze, current[1], neighbors)), neighbors))
+        connections[heapq.nsmallest(1, queue)[-1][-1]] = current[1]
+        print(connections)
+    return []
+
+
+
 def astar(maze):
     """
     Runs A star for part 1 of the assignment.
@@ -133,6 +156,7 @@ def astar_corner(maze):
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
     # TODO: Write your code here
+    return MST_prims(maze)
     finalPath = []
     dotsOrderQueue = []
     # dont go in order of dots, traverse through order of cost of dots?
@@ -140,21 +164,22 @@ def astar_corner(maze):
     #print(dotsList)
     flag2 = True
 
-    while dotsList != []:
-        tempDots = dotsList[0]
-        if flag2:
-            startNode = maze.getStart()
-            flag2 = False
-        else:
-            startNode = dotsOrderQueue[-1]
-        for dots in dotsList:
-            if (len(astarBetter(maze, startNode, dots)) < len(astarBetter(maze, startNode, tempDots))):
-                tempDots = dots
-        dotsOrderQueue.append(tempDots)
-        #print(tempDots)
-        dotsList.remove(tempDots)
-        #print(dotsList)
-    
+
+    # while dotsList != []:
+    #     tempDots = dotsList[0]
+    #     if flag2:
+    #         startNode = maze.getStart()
+    #         flag2 = False
+    #     else:
+    #         startNode = dotsOrderQueue[-1]
+    #     for dots in dotsList:
+    #         if (len(astarBetter(maze, startNode, dots)) < len(astarBetter(maze, startNode, tempDots))):
+    #             tempDots = dots
+    #     dotsOrderQueue.append(tempDots)
+    #     #print(tempDots)
+    #     dotsList.remove(tempDots)
+    #     #print(dotsList)
+
     counter = 0
     flag = True
     for end in dotsOrderQueue:
@@ -163,7 +188,7 @@ def astar_corner(maze):
             flag = False
             continue
         finalPath += astarBetter(maze, dotsOrderQueue[counter], end)
-        counter+=1
+        counter += 1
     return finalPath
 
 def astar_multi(maze):

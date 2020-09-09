@@ -113,26 +113,58 @@ def astarBetter(maze, startNode, endNode):
         done.append(current[1])
     return []
 
-def MST_prims(maze):
+#builds every edge, (x, y) : weight == (y, x) : weight if u look for it in tuple[0]/tuple[1]
+def edgeBuilder(maze):
     dots = maze.getObjectives()
-    connections = {}
-    queue = []
+    dots.append(maze.getStart())
+    fullList = list(dots)
+    # {(node1, node2) : distance}
+    dictionOfEdges = {}
+    while dots != []:
+        current = dots.pop()
+        nodesOtherThanCurrent = list(fullList)
+        for otherNodes in nodesOtherThanCurrent:
+            if (otherNodes == current or (otherNodes, current) in dictionOfEdges.keys()):
+                continue
+            dictionOfEdges[(current, otherNodes)] = len(astarBetter(maze, current, otherNodes))
+    return dictionOfEdges
 
-    heapq.heappush(queue, (0, maze.getStart()))
 
-    while queue != []:
-        current = heapq.heappop(queue)
-        print("current ",current[1])
-        #end condition bc this creates a cycle?
-        if len(connections) == (len(maze.getObjectives()) - 1 ):
-            return backtrace(connections, maze.getObjectives()[-1], maze.getStart())
-            break
+#this finds the edge weights of the mst without inputted node
+def MST_prims(currentNode, edgeList, restOfNodes):
+    #print(currentNode)
+    #use this to determine which edge to take out
+    priorityQueue = []
+    visited = []
+    weight = 0
+    if (restOfNodes == []):
+        return 0
+    while (restOfNodes != []):
+        current = restOfNodes.pop()
 
-        for neighbors in maze.getObjectives():
-            heapq.heappush(queue, (len(astarBetter(maze, current[1], neighbors)), neighbors))
-        connections[heapq.nsmallest(1, queue)[-1][-1]] = current[1]
-        print(connections)
-    return []
+        for otherNodes in restOfNodes:
+            firstTuple = (current, otherNodes)
+            secondTuple = (otherNodes, current)
+            if (current in visited):
+                continue
+            if (firstTuple in edgeList.keys()):
+                weight = edgeList.get(firstTuple)
+                heapq.heappush(priorityQueue, (weight, firstTuple))
+            if (secondTuple in edgeList.keys()):
+                weight = edgeList.get(secondTuple)
+                heapq.heappush(priorityQueue, (weight, secondTuple))
+        #print("top of queue", heapq.nsmallest(1, priorityQueue))
+        #print(heapq.nsmallest(priorityQueue,1))
+        #if (heap.nsmallest(priorityQueue, 1)[1])
+        # while (heapq.nsmallest(1, priorityQueue)[0][1] in visited or heapq.nsmallest(1, priorityQueue)[0][0] in visited):
+        #     priorityQueue.pop()
+        visited.append(heapq.nsmallest(1, priorityQueue)[0][0])
+        visited.append(heapq.nsmallest(1, priorityQueue)[0][1])
+        # if (priorityQueue == []):
+        #     break
+        weight += priorityQueue.pop()[0]
+    #print(weight)
+    return weight
 
 
 
@@ -147,39 +179,7 @@ def astar(maze):
     # TODO: Write your code here
     return astarBetter(maze, maze.getStart(), maze.getObjectives()[0])
 
-def astar_corner(maze):
-    """
-    Runs A star for part 2 of the assignment in the case where there are four corner objectives.
-
-    @param maze: The maze to execute the search on.
-
-    @return path: a list of tuples containing the coordinates of each state in the computed path
-    """
-    # TODO: Write your code here
-    return MST_prims(maze)
-    finalPath = []
-    dotsOrderQueue = []
-    # dont go in order of dots, traverse through order of cost of dots?
-    dotsList = maze.getObjectives()
-    #print(dotsList)
-    flag2 = True
-
-
-    # while dotsList != []:
-    #     tempDots = dotsList[0]
-    #     if flag2:
-    #         startNode = maze.getStart()
-    #         flag2 = False
-    #     else:
-    #         startNode = dotsOrderQueue[-1]
-    #     for dots in dotsList:
-    #         if (len(astarBetter(maze, startNode, dots)) < len(astarBetter(maze, startNode, tempDots))):
-    #             tempDots = dots
-    #     dotsOrderQueue.append(tempDots)
-    #     #print(tempDots)
-    #     dotsList.remove(tempDots)
-    #     #print(dotsList)
-
+def pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue):
     counter = 0
     flag = True
     for end in dotsOrderQueue:
@@ -189,7 +189,37 @@ def astar_corner(maze):
             continue
         finalPath += astarBetter(maze, dotsOrderQueue[counter], end)
         counter += 1
+        finalPath.pop(-1) # this removes the extra double up from the double starting node, this might remove the final node thoug hcareful
     return finalPath
+
+def astar_corner(maze):
+    """
+    Runs A star for part 2 of the assignment in the case where there are four corner objectives.
+
+    @param maze: The maze to execute the search on.
+
+    @return path: a list of tuples containing the coordinates of each state in the computed path
+    """
+    # TODO: Write your code here
+    edges = edgeBuilder(maze)
+    dotsList = maze.getObjectives()
+    dotsOrderQueue = []
+    while dotsList != []:
+        if (len(dotsList) == 1):
+            dotsOrderQueue.append(dotsList[-1])
+            break
+        currLowest = dotsList[0]
+        dotsListWithoutCurrLowest = list(dotsList)
+        dotsListWithoutCurrLowest.remove(currLowest)
+        for dots in dotsList:
+            dotsListWithoutDots = list(dotsList)
+            dotsListWithoutDots.remove(dots)
+            if (MST_prims(dots, edges, dotsListWithoutDots) < MST_prims(currLowest, edges, dotsListWithoutCurrLowest)):
+                currLowest = dots
+        dotsOrderQueue.append(currLowest)
+        dotsList.remove(currLowest)
+
+    return pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue)
 
 def astar_multi(maze):
     """

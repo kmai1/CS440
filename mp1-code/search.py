@@ -155,11 +155,11 @@ def isCyclic(graph, edge):
 
 def MST_kruskal(edgeList, V):
     #graph for cycle detection? dsets?
-    return 10
-    graph = []
+    #return 10
+    parent = {}
     #adds all edges since thteyre all disjoint at first
     for edges in edgeList:
-        grap.append(edges[1])
+        parent[edges] = -1
 
     #holds edges in order
     priorityQueue = []
@@ -171,16 +171,19 @@ def MST_kruskal(edgeList, V):
         heapq.heappush(priorityQueue, (edgeList.get(key), key))
 
     while len(edgesInTree) != (V - 1):
+        if priorityQueue == []:
+            return totalWeight
         lowestCostElement = heapq.heappop(priorityQueue)
         edge = lowestCostElement[1]
         weight = lowestCostElement[0]
         # cycle detection
-        if (isCyclic(graph, edge)):
-            continue
-
+        # if ():
+        #    return []
         edgesInTree.append(edge)
+        print(weight)
         totalWeight += weight
-
+        print("total weight", totalWeight)
+    print("super", totalWeight)
     return totalWeight
 
 def astar(maze):
@@ -205,6 +208,7 @@ def pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue):
         finalPath += astarBetter(maze, dotsOrderQueue[counter], end)
         counter += 1
         finalPath.pop(-1) # this removes the extra double up from the double starting node, this might remove the final node thoug hcareful
+        finalPath.append(dotsOrderQueue[-1])
     return finalPath
 def removeConnectionsToGiven(dicti, dot):
 
@@ -238,6 +242,7 @@ def astar_corner(maze):
             tempEdgeList = dict(edges)
             tempEdgeList = removeConnectionsToGiven(tempEdgeList, dots)
             if (MST_kruskal(tempEdgeList, len(dotsList) - 1) <= lowestCost):
+                print("start a MST iteration")
                 lowerCost = MST_kruskal(tempEdgeList, len(dotsList) - 1)
                 resultDot = dots
                 forUpdatingEdgesOnIteration = tempEdgeList

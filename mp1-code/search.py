@@ -129,44 +129,59 @@ def edgeBuilder(maze):
             dictionOfEdges[(current, otherNodes)] = len(astarBetter(maze, current, otherNodes))
     return dictionOfEdges
 
+def find(parent, indexOfLooking):
+    #found it
+        if parent[indexOfLooking] == indexOfLooking:
+            return indexOfLooking
+        # kepp looking
+        return find(parent, parent[indexOfLooking])
 
-#this finds the edge weights of the mst without inputted node
-def MST_prims(currentNode, edgeList, restOfNodes):
-    #print(currentNode)
-    #use this to determine which edge to take out
+def union(parent, rankOfEdges, firstNode, secondNode):
+    firstNodeRank = find(parent, firstNode)
+    secondNodeRank = find(parent, secondNode)
+
+    if rank[firstNodeRank] < rankOfEdges[secondNodeRank]:
+        parent[firstNodeRank] = secondNodeRank
+    elif rank[firstNodeRank] > rankOfEdges[secondNodeRank]:
+        parent[secondNodeRank] = firstNodeRank
+    else:
+        parent[secondNodeRank] = firstNodeRank
+        rankOfEdges[firstNodeRank] += 1
+
+
+def isCyclic(graph, edge):
+    #if find(edge[0]:
+        return[]
+
+def MST_kruskal(edgeList, V):
+    #graph for cycle detection? dsets?
+    return 10
+    graph = []
+    #adds all edges since thteyre all disjoint at first
+    for edges in edgeList:
+        grap.append(edges[1])
+
+    #holds edges in order
     priorityQueue = []
-    visited = []
-    weight = 0
-    if (restOfNodes == []):
-        return 0
-    while (restOfNodes != []):
-        current = restOfNodes.pop()
+    #edges i have
+    edgesInTree = []
+    #total weighht of edges
+    totalWeight = 0
+    for key in edgeList.keys():
+        heapq.heappush(priorityQueue, (edgeList.get(key), key))
 
-        for otherNodes in restOfNodes:
-            firstTuple = (current, otherNodes)
-            secondTuple = (otherNodes, current)
-            if (current in visited):
-                continue
-            if (firstTuple in edgeList.keys()):
-                weight = edgeList.get(firstTuple)
-                heapq.heappush(priorityQueue, (weight, firstTuple))
-            if (secondTuple in edgeList.keys()):
-                weight = edgeList.get(secondTuple)
-                heapq.heappush(priorityQueue, (weight, secondTuple))
-        #print("top of queue", heapq.nsmallest(1, priorityQueue))
-        #print(heapq.nsmallest(priorityQueue,1))
-        #if (heap.nsmallest(priorityQueue, 1)[1])
-        # while (heapq.nsmallest(1, priorityQueue)[0][1] in visited or heapq.nsmallest(1, priorityQueue)[0][0] in visited):
-        #     priorityQueue.pop()
-        visited.append(heapq.nsmallest(1, priorityQueue)[0][0])
-        visited.append(heapq.nsmallest(1, priorityQueue)[0][1])
-        # if (priorityQueue == []):
-        #     break
-        weight += priorityQueue.pop()[0]
-    #print(weight)
-    return weight
+    while len(edgesInTree) != (V - 1):
+        lowestCostElement = heapq.heappop(priorityQueue)
+        edge = lowestCostElement[1]
+        weight = lowestCostElement[0]
+        # cycle detection
+        if (isCyclic(graph, edge)):
+            continue
 
+        edgesInTree.append(edge)
+        totalWeight += weight
 
+    return totalWeight
 
 def astar(maze):
     """
@@ -191,7 +206,13 @@ def pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue):
         counter += 1
         finalPath.pop(-1) # this removes the extra double up from the double starting node, this might remove the final node thoug hcareful
     return finalPath
+def removeConnectionsToGiven(dicti, dot):
 
+    tempDict = dict(dicti)
+    for keys in dicti.keys():
+        if (keys[0] == dot or keys[1] == dot):
+            tempDict.pop(keys)
+    return tempDict
 def astar_corner(maze):
     """
     Runs A star for part 2 of the assignment in the case where there are four corner objectives.
@@ -201,24 +222,29 @@ def astar_corner(maze):
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
     # TODO: Write your code here
+    #x = MST_kruskal(edgeBuilder(maze), 5)
+    #print(maze.getObjectives())
     edges = edgeBuilder(maze)
     dotsList = maze.getObjectives()
     dotsOrderQueue = []
+    if (len(dotsList) == 1):
+        dotsOrderQueue.append(dotsList[-1])
+        return pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue)
     while dotsList != []:
-        if (len(dotsList) == 1):
-            dotsOrderQueue.append(dotsList[-1])
-            break
-        currLowest = dotsList[0]
-        dotsListWithoutCurrLowest = list(dotsList)
-        dotsListWithoutCurrLowest.remove(currLowest)
+        forUpdatingEdgesOnIteration = {}
+        lowestCost = float('inf')
+        resultDot = dotsList[0]
         for dots in dotsList:
-            dotsListWithoutDots = list(dotsList)
-            dotsListWithoutDots.remove(dots)
-            if (MST_prims(dots, edges, dotsListWithoutDots) < MST_prims(currLowest, edges, dotsListWithoutCurrLowest)):
-                currLowest = dots
-        dotsOrderQueue.append(currLowest)
-        dotsList.remove(currLowest)
-
+            tempEdgeList = dict(edges)
+            tempEdgeList = removeConnectionsToGiven(tempEdgeList, dots)
+            if (MST_kruskal(tempEdgeList, len(dotsList) - 1) <= lowestCost):
+                lowerCost = MST_kruskal(tempEdgeList, len(dotsList) - 1)
+                resultDot = dots
+                forUpdatingEdgesOnIteration = tempEdgeList
+        edgeList = dict(forUpdatingEdgesOnIteration)
+        dotsOrderQueue.append(resultDot)
+        dotsList.remove(resultDot)
+    #print(pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue))
     return pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue)
 
 def astar_multi(maze):

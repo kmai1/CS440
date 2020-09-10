@@ -129,38 +129,35 @@ def edgeBuilder(maze):
             dictionOfEdges[(current, otherNodes)] = len(astarBetter(maze, current, otherNodes))
     return dictionOfEdges
 
-def find(parent, indexOfLooking):
-    #found it
-        if parent[indexOfLooking] == indexOfLooking:
-            return indexOfLooking
-        # kepp looking
-        return find(parent, parent[indexOfLooking])
-
-def union(parent, rankOfEdges, firstNode, secondNode):
-    firstNodeRank = find(parent, firstNode)
-    secondNodeRank = find(parent, secondNode)
-
-    if rank[firstNodeRank] < rankOfEdges[secondNodeRank]:
-        parent[firstNodeRank] = secondNodeRank
-    elif rank[firstNodeRank] > rankOfEdges[secondNodeRank]:
-        parent[secondNodeRank] = firstNodeRank
+def union(parent, rank, set1, set2):
+    one = find(parent, set1)
+    two = find(parent, set2)
+    if rank[one] < rank[two]:
+        parent[one] = two
+    elif rank[one] > rank[two]:
+        parent[two] = one
     else:
-        parent[secondNodeRank] = firstNodeRank
-        rankOfEdges[firstNodeRank] += 1
+        parent[two] = one
+        rank[one] += 1
+        return parent
 
-
-def isCyclic(graph, edge):
-    #if find(edge[0]:
-        return[]
+def find(parent, k):
+    if parent[k] == (-1, -1):
+        return k
+    if parent[k] != (-1, -1):
+        return find(parent, parent[k])
 
 def MST_kruskal(edgeList, V):
     #graph for cycle detection? dsets?
-    #return 10
+
     parent = {}
+    rank = {}
     #adds all edges since thteyre all disjoint at first
     for edges in edgeList:
-        parent[edges] = -1
-
+        parent[edges[0]] = (-1, -1)
+        parent[edges[1]] = (-1, -1)
+        rank[edges[0]] = 0
+        rank[edges[1]] = 0
     #holds edges in order
     priorityQueue = []
     #edges i have
@@ -177,14 +174,65 @@ def MST_kruskal(edgeList, V):
         edge = lowestCostElement[1]
         weight = lowestCostElement[0]
         # cycle detection
-        # if ():
-        #    return []
-        edgesInTree.append(edge)
-        print(weight)
-        totalWeight += weight
-        print("total weight", totalWeight)
-    print("super", totalWeight)
+        if (find(parent, edge[0]) != find(parent, edge[1])):
+        #  end cycle detection
+            edgesInTree.append(edge)
+            totalWeight += weight
+            union(parent, rank, edge[0], edge[1])
+    print(edgesInTree)
     return totalWeight
+
+
+# def MST_prims(edgeList, V):
+#     visitedNodes = []
+#     unvisitedNodes = []
+#     totalWeight = 0
+#     # for edges in edgeList:
+#     #     unvisitedNodes.append(edges[0])
+#     #     unvisitedNodes.append(edges[1])
+#     # temp = unvisitedNodes.pop()
+#     # visitedNodes.append(temp)
+#     # queue = []
+#     # for edges in edgeList:
+#     #     if edges[1] == temp or edges[0] == temp:
+#     #         heapq.heappush(queue,(edgeList.get(edges), edges))
+#     # print("shouldhaveall",queue)
+#     # while (unvisitedNodes != []):
+#     #     if (queue == []):
+#     #         break
+#     #     topOfHeapQueue = heapq.heappop(queue)
+#     #     print("topofheap",topOfHeapQueue)
+#     #     edgeOfTop = topOfHeapQueue[1]
+#     #     weightOfTop = topOfHeapQueue[0]
+#     #     for edges in edgeList:
+#     #         if edges[1] == topOfHeapQueue or edges[0] == topOfHeapQueue:
+#     #             heapq.heappush(queue,(edgeList.get(edges), edges))
+#     #     if (nodeOfTop[0] in visitedNodes and nodeOfTop[1] in unvisitedNodes):
+#     #         visitedNodes.append(edgeOfTop[1])
+#     #         unvisitedNodes.remove(edgeOfTop[1])
+#     #         totalWeight += weightOfTop
+#     return 10
+#     for edges in edgeList:
+#         unvisitedNodes.append(edges[0])
+#         unvisitedNodes.append(edges[1])
+#     temp = unvisitedNodes.pop()
+#     visitedNodes.append(temp)
+#     while (unvisitedNodes != []):
+#         for edges in edgeList:
+#             currLowest = 9999999999
+#             lowestThatMeetsRequirements = visitedNodes[-1]
+#             print("edgeList")
+#             print("this is my visited", visitedNodes)
+#             print("this is my unvisited", unvisitedNodes)
+#             print("edges i look at", edges)
+#             if (edges[0] in visitedNodes and edges[1] in unvisitedNodes and edgeList.get(edges) < currLowest):
+#                 lowestThatMeetsRequirements = edges
+#                 currLowest = edgeList.get(edges)
+#                 visitedNodes.append(edges[1])
+#                 unvisitedNodes.remove(edges[1])
+#                 totalWeight += edgeList.get(edges)
+#
+#     return totalWeight
 
 def astar(maze):
     """
@@ -208,15 +256,16 @@ def pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue):
         finalPath += astarBetter(maze, dotsOrderQueue[counter], end)
         counter += 1
         finalPath.pop(-1) # this removes the extra double up from the double starting node, this might remove the final node thoug hcareful
-        finalPath.append(dotsOrderQueue[-1])
+    finalPath.append(dotsOrderQueue[-1])
     return finalPath
-def removeConnectionsToGiven(dicti, dot):
 
+def removeConnectionsToGiven(dicti, dot):
     tempDict = dict(dicti)
     for keys in dicti.keys():
         if (keys[0] == dot or keys[1] == dot):
             tempDict.pop(keys)
     return tempDict
+
 def astar_corner(maze):
     """
     Runs A star for part 2 of the assignment in the case where there are four corner objectives.
@@ -226,30 +275,41 @@ def astar_corner(maze):
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
     # TODO: Write your code here
-    #x = MST_kruskal(edgeBuilder(maze), 5)
-    #print(maze.getObjectives())
+
+    #testing
+
     edges = edgeBuilder(maze)
+    neverChangedEdges = dict(edges)
     dotsList = maze.getObjectives()
     dotsOrderQueue = []
+    startNode = maze.getStart()
     if (len(dotsList) == 1):
         dotsOrderQueue.append(dotsList[-1])
         return pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue)
     while dotsList != []:
-        forUpdatingEdgesOnIteration = {}
         lowestCost = float('inf')
+        forUpdatingEdgesOnIteration = {}
+        #lowestCost = float('inf')
         resultDot = dotsList[0]
+        if (len(dotsList) == 1):
+            dotsOrderQueue.append(dotsList[-1])
+            break
         for dots in dotsList:
             tempEdgeList = dict(edges)
             tempEdgeList = removeConnectionsToGiven(tempEdgeList, dots)
-            if (MST_kruskal(tempEdgeList, len(dotsList) - 1) <= lowestCost):
-                print("start a MST iteration")
-                lowerCost = MST_kruskal(tempEdgeList, len(dotsList) - 1)
+            startNodeToDotsWeight = 0
+            if (startNode, dots) in neverChangedEdges.keys():
+                startNodeToDotsWeight = neverChangedEdges.get((startNode, dots))
+            else:
+                startNodeToDotsWeight = neverChangedEdges.get((dots, startNode))
+            if (startNodeToDotsWeight + MST_kruskal(tempEdgeList, len(dotsList) - 1) <= lowestCost):
+                lowestCost = (startNodeToDotsWeight + MST_kruskal(tempEdgeList, len(dotsList) - 1))
                 resultDot = dots
                 forUpdatingEdgesOnIteration = tempEdgeList
-        edgeList = dict(forUpdatingEdgesOnIteration)
+        edges = dict(forUpdatingEdgesOnIteration)
         dotsOrderQueue.append(resultDot)
         dotsList.remove(resultDot)
-    #print(pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue))
+        startNode = dotsOrderQueue[-1]
     return pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue)
 
 def astar_multi(maze):

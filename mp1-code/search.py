@@ -126,7 +126,8 @@ def edgeBuilder(maze):
         for otherNodes in nodesOtherThanCurrent:
             if (otherNodes == current or (otherNodes, current) in dictionOfEdges.keys()):
                 continue
-            dictionOfEdges[(current, otherNodes)] = len(astarBetter(maze, current, otherNodes))
+            #dictionOfEdges[(current, otherNodes)] = len(astarBetter(maze, current, otherNodes))
+            dictionOfEdges[(current, otherNodes)] = heuristics(current, otherNodes)
     return dictionOfEdges
 
 def union(parent, rank, set1, set2):
@@ -168,8 +169,8 @@ def MST_kruskal(edgeList, V):
         heapq.heappush(priorityQueue, (edgeList.get(key), key))
 
     while len(edgesInTree) != (V - 1):
-        if priorityQueue == []:
-            return totalWeight
+        # if priorityQueue == []:
+        #     return totalWeight
         lowestCostElement = heapq.heappop(priorityQueue)
         edge = lowestCostElement[1]
         weight = lowestCostElement[0]
@@ -179,60 +180,7 @@ def MST_kruskal(edgeList, V):
             edgesInTree.append(edge)
             totalWeight += weight
             union(parent, rank, edge[0], edge[1])
-    print(edgesInTree)
     return totalWeight
-
-
-# def MST_prims(edgeList, V):
-#     visitedNodes = []
-#     unvisitedNodes = []
-#     totalWeight = 0
-#     # for edges in edgeList:
-#     #     unvisitedNodes.append(edges[0])
-#     #     unvisitedNodes.append(edges[1])
-#     # temp = unvisitedNodes.pop()
-#     # visitedNodes.append(temp)
-#     # queue = []
-#     # for edges in edgeList:
-#     #     if edges[1] == temp or edges[0] == temp:
-#     #         heapq.heappush(queue,(edgeList.get(edges), edges))
-#     # print("shouldhaveall",queue)
-#     # while (unvisitedNodes != []):
-#     #     if (queue == []):
-#     #         break
-#     #     topOfHeapQueue = heapq.heappop(queue)
-#     #     print("topofheap",topOfHeapQueue)
-#     #     edgeOfTop = topOfHeapQueue[1]
-#     #     weightOfTop = topOfHeapQueue[0]
-#     #     for edges in edgeList:
-#     #         if edges[1] == topOfHeapQueue or edges[0] == topOfHeapQueue:
-#     #             heapq.heappush(queue,(edgeList.get(edges), edges))
-#     #     if (nodeOfTop[0] in visitedNodes and nodeOfTop[1] in unvisitedNodes):
-#     #         visitedNodes.append(edgeOfTop[1])
-#     #         unvisitedNodes.remove(edgeOfTop[1])
-#     #         totalWeight += weightOfTop
-#     return 10
-#     for edges in edgeList:
-#         unvisitedNodes.append(edges[0])
-#         unvisitedNodes.append(edges[1])
-#     temp = unvisitedNodes.pop()
-#     visitedNodes.append(temp)
-#     while (unvisitedNodes != []):
-#         for edges in edgeList:
-#             currLowest = 9999999999
-#             lowestThatMeetsRequirements = visitedNodes[-1]
-#             print("edgeList")
-#             print("this is my visited", visitedNodes)
-#             print("this is my unvisited", unvisitedNodes)
-#             print("edges i look at", edges)
-#             if (edges[0] in visitedNodes and edges[1] in unvisitedNodes and edgeList.get(edges) < currLowest):
-#                 lowestThatMeetsRequirements = edges
-#                 currLowest = edgeList.get(edges)
-#                 visitedNodes.append(edges[1])
-#                 unvisitedNodes.remove(edges[1])
-#                 totalWeight += edgeList.get(edges)
-#
-#     return totalWeight
 
 def astar(maze):
     """
@@ -247,16 +195,15 @@ def astar(maze):
 
 def pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue):
     counter = 0
-    flag = True
+    startNode = maze.getStart()
+    finalPath = []
     for end in dotsOrderQueue:
-        if flag:
-            finalPath =  astarBetter(maze, maze.getStart(), end)
-            flag = False
-            continue
-        finalPath += astarBetter(maze, dotsOrderQueue[counter], end)
+        finalPath += astarBetter(maze, startNode, end)
+        startNode = dotsOrderQueue[counter]
         counter += 1
         finalPath.pop(-1) # this removes the extra double up from the double starting node, this might remove the final node thoug hcareful
     finalPath.append(dotsOrderQueue[-1])
+    print(finalPath)
     return finalPath
 
 def removeConnectionsToGiven(dicti, dot):
@@ -266,6 +213,41 @@ def removeConnectionsToGiven(dicti, dot):
             tempDict.pop(keys)
     return tempDict
 
+    #currentNode will not be in listOfObjectives
+def testHeuristics(startNode, currentNode, listOfObjectives, MST_cost, maze):
+    totalWeight = 0
+    totalWeight += MST_cost
+    tempWeight = float('inf')
+    for nodes in listOfObjectives:
+        if (heuristics(currentNode, nodes) < tempWeight):
+            tempWeight = heuristics(currentNode, nodes)
+    totalWeight += tempWeight
+    #totalWeight += heuristics(startNode, currentNode)
+    return totalWeight
+
+def test_astar_corner(maze):
+    allTheEdges = edgeBuilder(maze)
+    edges = dict(allTheEdges)
+    #edges = removeConnectionsToGiven(edges, maze.getStart())
+    dotsList = maze.getObjectives()
+    dotsOrder = []
+    startNode = maze.getStart()
+    while dotsList != []:
+        heuristicsPQueue = []
+        for dots in dotsList:
+            resultDot = dotsList[0]
+            listOfObjectives = list(dotsList)
+            listOfObjectives.remove(dots)
+            #tempEdges = dict(edges)
+            MST_cost = MST_kruskal(edges, len(dotsList))
+            heapq.heappush(heuristicsPQueue,  (len(astarBetter(maze, startNode, dots)) + testHeuristics(startNode, dots, listOfObjectives, MST_cost, maze), dots))
+        top = heapq.heappop(heuristicsPQueue)
+        dotsOrder.append(top[1])
+        dotsList.remove(top[1])
+        edges = removeConnectionsToGiven(edges, dots)
+        startNode = dotsOrder[-1]
+    # print(dotsOrder)
+    return pathwayGivenMazeAndOrderOfDots(maze, dotsOrder)
 def astar_corner(maze):
     """
     Runs A star for part 2 of the assignment in the case where there are four corner objectives.
@@ -275,10 +257,11 @@ def astar_corner(maze):
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
     # TODO: Write your code here
+    return test_astar_corner(maze)
+    edgesHolding = edgeBuilder(maze)
 
-    #testing
-
-    edges = edgeBuilder(maze)
+    edges = dict(edgesHolding)
+    # contains edges never changed
     neverChangedEdges = dict(edges)
     dotsList = maze.getObjectives()
     dotsOrderQueue = []
@@ -286,30 +269,34 @@ def astar_corner(maze):
     if (len(dotsList) == 1):
         dotsOrderQueue.append(dotsList[-1])
         return pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue)
+
     while dotsList != []:
         lowestCost = float('inf')
-        forUpdatingEdgesOnIteration = {}
-        #lowestCost = float('inf')
         resultDot = dotsList[0]
-        if (len(dotsList) == 1):
-            dotsOrderQueue.append(dotsList[-1])
-            break
         for dots in dotsList:
             tempEdgeList = dict(edges)
+            #tempEdgeList = removeConnectionsToGiven(tempEdgeList, startNode)
             tempEdgeList = removeConnectionsToGiven(tempEdgeList, dots)
-            startNodeToDotsWeight = 0
-            if (startNode, dots) in neverChangedEdges.keys():
-                startNodeToDotsWeight = neverChangedEdges.get((startNode, dots))
-            else:
-                startNodeToDotsWeight = neverChangedEdges.get((dots, startNode))
-            if (startNodeToDotsWeight + MST_kruskal(tempEdgeList, len(dotsList) - 1) <= lowestCost):
-                lowestCost = (startNodeToDotsWeight + MST_kruskal(tempEdgeList, len(dotsList) - 1))
+            MST_cost = MST_kruskal(tempEdgeList, len(dotsList))
+            tempEdgeList = dict(edges)
+            listWithoutLookingDot = list(dotsList)
+            listWithoutLookingDot.remove(dots)
+            if (testHeuristics(dots, listWithoutLookingDot, MST_cost) < lowestCost):
+                lowestCost = testHeuristics(dots, listWithoutLookingDot, MST_cost)
                 resultDot = dots
-                forUpdatingEdgesOnIteration = tempEdgeList
-        edges = dict(forUpdatingEdgesOnIteration)
+            # if cornerHeuristic(startNode, dots, MST_cost, tempEdgeList, listWithoutLookingDot) < lowestCost:
+            #     # print("this dot is updating it", dots)
+            #     # print ("cornerHeustric", cornerHeuristic(startNode, dots, MST_cost, neverChangedEdges))
+            #     # print("previos lowestCost", lowestCost)
+            #     lowestCost = cornerHeuristic(startNode, dots, MST_cost, tempEdgeList, listWithoutLookingDot)
+            #     resultDot = dots
+            #     #forUpdatingEdgesOnIteration = tempEdgeList
+            #
+        edges = removeConnectionsToGiven(edges, resultDot)
         dotsOrderQueue.append(resultDot)
         dotsList.remove(resultDot)
         startNode = dotsOrderQueue[-1]
+
     return pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue)
 
 def astar_multi(maze):

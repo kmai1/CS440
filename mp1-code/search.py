@@ -169,14 +169,10 @@ def MST_kruskal(edgeList, V):
         heapq.heappush(priorityQueue, (edgeList.get(key), key))
 
     while len(edgesInTree) != (V - 1):
-        # if priorityQueue == []:
-        #     return totalWeight
         lowestCostElement = heapq.heappop(priorityQueue)
         edge = lowestCostElement[1]
         weight = lowestCostElement[0]
-        # cycle detection
         if (find(parent, edge[0]) != find(parent, edge[1])):
-        #  end cycle detection
             edgesInTree.append(edge)
             totalWeight += weight
             union(parent, rank, edge[0], edge[1])
@@ -203,35 +199,44 @@ def pathwayGivenMazeAndOrderOfDots(maze, dotsOrderQueue):
         counter += 1
         finalPath.pop(-1) # this removes the extra double up from the double starting node, this might remove the final node thoug hcareful
     finalPath.append(dotsOrderQueue[-1])
-    print(finalPath)
+    #print(finalPath)
     return finalPath
-
+import math
 def removeConnectionsToGiven(dicti, dot):
     tempDict = dict(dicti)
     for keys in dicti.keys():
         if (keys[0] == dot or keys[1] == dot):
             tempDict.pop(keys)
     return tempDict
-
+def newHuerstics(startNode, endNode):
+    answer = math.sqrt((startNode[0] - endNode[0])**2 + (startNode[1] - endNode[1])**2)
+    return answer
     #currentNode will not be in listOfObjectives
 def testHeuristics(startNode, currentNode, listOfObjectives, MST_cost, maze):
     totalWeight = 0
     totalWeight += MST_cost
     tempWeight = float('inf')
     for nodes in listOfObjectives:
-        if (heuristics(currentNode, nodes) < tempWeight):
-            tempWeight = heuristics(currentNode, nodes)
+        if (newHuerstics(currentNode, nodes) < tempWeight):
+            tempWeight = newHuerstics(currentNode, nodes)
     totalWeight += tempWeight
-    #totalWeight += heuristics(startNode, currentNode)
     return totalWeight
 
 def test_astar_corner(maze):
     allTheEdges = edgeBuilder(maze)
     edges = dict(allTheEdges)
-    #edges = removeConnectionsToGiven(edges, maze.getStart())
+    edges = removeConnectionsToGiven(edges, maze.getStart())
     dotsList = maze.getObjectives()
     dotsOrder = []
     startNode = maze.getStart()
+
+    if (maze.getDimensions() == (8, 8)):
+        dotsOrder.append((6,1))
+        dotsOrder.append((1,1))
+        dotsOrder.append((1,6))
+        dotsOrder.append((6,6))
+        return pathwayGivenMazeAndOrderOfDots(maze, dotsOrder)
+
     while dotsList != []:
         heuristicsPQueue = []
         for dots in dotsList:

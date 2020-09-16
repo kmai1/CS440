@@ -251,7 +251,7 @@ def test_astar_corner(maze):
         dotsList.remove(top[1])
         edges = removeConnectionsToGiven(edges, dots)
         startNode = dotsOrder[-1]
-    # print(dotsOrder)
+    print(dotsOrder)
     return pathwayGivenMazeAndOrderOfDots(maze, dotsOrder)
 def astar_corner(maze):
     """

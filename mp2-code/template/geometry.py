@@ -15,6 +15,9 @@ import math
 import numpy as np
 from const import *
 
+# first armlink angle = alpha
+# second armlink angle = alpha + beta already piazza post 473
+
 def computeCoordinate(start, length, angle):
     """Compute the end cooridinate based on the given start position, length and angle.
 
@@ -26,8 +29,16 @@ def computeCoordinate(start, length, angle):
         Return:
             End position (int,int):of the arm link, (x-coordinate, y-coordinate)
     """
+    # print("start", start)
+    # print("length", length)
+    # print("angle", angle)
+    rads = math.radians(angle)
+    newX = (length * np.cos(rads)) + start[0]
 
-    return (0, 0)
+    newY = (length * np.sin(rads)) + start[1]
+    answer = (newX, newY)
+    # print("answer", answer)
+    return answer
 
 def doesArmTouchObjects(armPosDist, objects, isGoal=False):
     """Determine whether the given arm links touch any obstacle or goal
@@ -52,6 +63,10 @@ def doesArmTipTouchGoals(armEnd, goals):
         Return:
             True if arm tip touches any goal. False if not.
     """
+    for goal in goals:
+        distBetween = math.sqrt((armEnd[0] - goal[0])**2 + (armEnd[1] - goal[1])**2)
+        if distBetween <= goal[2]:
+            return True
     return False
 
 
@@ -65,6 +80,18 @@ def isArmWithinWindow(armPos, window):
         Return:
             True if all parts are in the window. False if not.
     """
+    print("window", window)
+    width = window[0]
+    height = window[1]
+    for armLinks in armPos:
+        startPos = armLinks[0]
+        endPos = armLinks[1]
+        # check x y of start pos
+        if (startPos[0] < 0 or startPos[0] > width or startPos[1] < 0 or startPos[1] > height):
+            return False
+        #check x y of end pos
+        if (endPos[0] < 0 or endPos[0] > width or endPos[1] < 0 or endPos[1] > height):
+            return False
     return True
 
 

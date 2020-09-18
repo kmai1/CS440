@@ -26,10 +26,34 @@ def search(maze, searchMethod):
         "bfs": bfs,
     }.get(searchMethod, [])(maze)
 
+def backtrace(connections, start, end):
+    answer = [end]
+    while answer[-1] != start:
+        answer.append(connections[answer[-1]])
+    answer.reverse()
+    return answer
+
 def bfs(maze):
     # Write your code here
     """
     This function returns optimal path in a list, which contains start and objective.
-    If no path found, return None. 
+    If no path found, return None.
     """
-    return []
+    queue = []
+    visited = []
+    connections = {}
+    queue.append(maze.getStart())
+    while queue != []:
+        current = queue.pop(0)
+        if current in visited:
+            continue
+        if current in maze.getObjectives():
+            return backtrace(connections, maze.getStart(), current)
+        for neighbors in maze.getNeighbors(current[0], current[1]):
+            # prevents double up that infinite loops
+            if neighbors in connections:
+                continue
+            connections[neighbors] = current
+            queue.append(neighbors)
+        visited.append(current)
+    return None

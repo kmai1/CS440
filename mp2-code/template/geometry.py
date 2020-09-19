@@ -33,12 +33,49 @@ def computeCoordinate(start, length, angle):
     # print("length", length)
     # print("angle", angle)
     rads = math.radians(angle)
-    newX = (length * np.cos(rads)) + start[0]
+    newX = length * math.floor(np.cos(rads)) + start[0]
 
-    newY = (length * np.sin(rads)) + start[1]
+    newY = length * math.floor(np.sin(rads)) + start[1]
     answer = (newX, newY)
     # print("answer", answer)
     return answer
+
+# Reference: https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
+def lineTouchCircle(startX, startY, endX, endY, circleX, circleY, radius):
+    x_prime = endX - startX
+    y_prime = endY - startY
+    squaredDist = x_prime ** 2 + y_prime ** 2
+
+    u = ((circleX - startX) * x_prime + (circleY - circleX) * y_prime) / float(squaredDist)
+
+    if (u > 1):
+        u = 1
+    elif (u < 1):
+        u = 0
+
+    x = startX + u * x_prime
+    y = startY + u * y_prime
+
+    dx = x - circleX
+    dy = y - circleY
+    dist = math.sqrt((dx ** 2) + (dy ** 2))
+    if dist <= radius:
+        return True
+    return False
+
+def lineIntersectDotProducts(startPoint, endPoint, circleCenter, radius):
+    start = np.array([startPoint[0], startPoint[1]])
+    circle = np.array([circleCenter[0], circleCenter[1]])
+
+    start_to_circle = np.subtract(circle, start)
+    start_to_end = np.array([endPoint[0] - startPoint[0], endPoint[1] - endPoint[1]])
+
+    proj = np.dot(start_to_circle, start_to_end) / np.dot(start_to_end, start_to_end) * start_to_end
+
+    vertical_vec = np.subtract(start_to_circle, proj)
+    dist = np.linalg.norm(vertical_vec)
+
+    return dist <= radius
 
 def doesArmTouchObjects(armPosDist, objects, isGoal=False):
     """Determine whether the given arm links touch any obstacle or goal
@@ -52,6 +89,22 @@ def doesArmTouchObjects(armPosDist, objects, isGoal=False):
         Return:
             True if touched. False if not.
     """
+    # print(armPosDist)
+    for arms in armPosDist:
+        startX = arms[0][0]
+        startY = arms[0][1]
+        endX = arms[1][0]
+        endY = arms[1][1]
+        for obj in objects:
+            circleX = obj[0]
+            circleY = obj[1]
+            radius = obj[2]
+            if isGoal:
+                return lineIntersectDotProducts(arms[0], arms[1], (circleX, circleY), radius)
+                return lineTouchCircle(startX, startY, endX, endY, circleX, circleY, radius)
+            if (not isGoal):
+                return lineIntersectDotProducts(arms[0], arms[1], (circleX, circleY), radius + obj[2])
+                return lineTouchCircle(startX, startY, endX, endY, circleX, circleY, radius + obj[2])
     return False
 
 def doesArmTipTouchGoals(armEnd, goals):
@@ -80,7 +133,6 @@ def isArmWithinWindow(armPos, window):
         Return:
             True if all parts are in the window. False if not.
     """
-    print("window", window)
     width = window[0]
     height = window[1]
     for armLinks in armPos:

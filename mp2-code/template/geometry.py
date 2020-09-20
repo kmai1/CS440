@@ -99,10 +99,10 @@ def doesArmTouchObjects(armPosDist, objects, isGoal=False):
             circleX = obj[0]
             circleY = obj[1]
             radius = obj[2]
-            if isGoal:
+            if isGoal && return lineIntersectDotProducts(arms[0], arms[1], (circleX, circleY), radius):
                 return lineIntersectDotProducts(arms[0], arms[1], (circleX, circleY), radius)
                 return lineTouchCircle(startX, startY, endX, endY, circleX, circleY, radius)
-            if (not isGoal):
+            if (not isGoal && return lineIntersectDotProducts(arms[0], arms[1], (circleX, circleY), radius)):
                 return lineIntersectDotProducts(arms[0], arms[1], (circleX, circleY), radius + obj[2])
                 return lineTouchCircle(startX, startY, endX, endY, circleX, circleY, radius + obj[2])
     return False

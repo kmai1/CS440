@@ -34,5 +34,5 @@ def transformToMaze(arm, goals, obstacles, window, granularity):
             Maze: the maze instance generated based on input arguments.
 
     """
-    
+    return Maze
     pass

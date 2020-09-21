@@ -34,5 +34,21 @@ def transformToMaze(arm, goals, obstacles, window, granularity):
             Maze: the maze instance generated based on input arguments.
 
     """
-    return Maze
+    arm_alpha = arm.getArmAngle()[0]
+    arm_beta = arm.getArmAngle()[1] # beta might be w respect to alpha
+    arms_alpha_minmax = arm.getArmLimit()[0] # (min,max)
+    arms_beta_minmax = arm.getArmLimit()[1] # (min, max)
+
+    rows = math.floor(((arms_alpha_minmax[1] - arms_alpha_minmax[0]) / granularity)) + 1 # if division isnt int, floor
+    columns = math.floor(((arms_beta_minmax[1] - arms_beta_minmax[0])) / granularity) + 1 # if divisoin isnt int, floor
+
+    maze = [[WALL_CHAR for x in range(columns)] for y in range(rows)]
+
+    # 576 to figure out offset
+    answer = Maze(maze, (arms_alpha_minmax[0], arms_beta_minmax[0]), granularity)
+    answer.setStart(arm.getBase())
+
+    for (i in range()
+    print(answer)
+    return answer
     pass

@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to the University of Illinois at Urbana-Champaign
-# 
+#
 # Created by Jongdeog Lee (jlee700@illinois.edu) on 09/12/2018
 
 """
@@ -37,7 +37,7 @@ class Arm:
             totalRelativeAngle += relativeAngle
             armLink = ArmLink(base, length, totalRelativeAngle % 360, distance)
             self.__armLinks.append(armLink)
-            base = armLink.getEnd()        
+            base = armLink.getEnd()
 
 
     def getBase(self):
@@ -53,18 +53,18 @@ class Arm:
     def getArmPos(self):
         """This function returns (start, end) of all arm links
            For example, if there are two arm links, the return value would be '
-           [ [(x1, y1), (x2, y2)], 
+           [ [(x1, y1), (x2, y2)],
              [(x2, y2), (x3, y3)] ]
         """
         info = []
         for armLink in self.__armLinks:
             info.append((armLink.getBase(), armLink.getEnd()))
         return info
-    
+
     def getArmPosDist(self):
         """This function returns (start, end) of all arm links with the padding distance of the arm
            For example, if there are two arm links, the return value would be '
-           [ [(x1, y1), (x2, y2), distance], 
+           [ [(x1, y1), (x2, y2), distance],
              [(x2, y2), (x3, y3), distance] ]
         """
         info = [(armLink.getBase(), armLink.getEnd(), armLink.getDistance()) for armLink in self.__armLinks]
@@ -72,11 +72,11 @@ class Arm:
 
     def getArmAngle(self):
         """This function returns relative angles of all arm links.
-           If there are two arm links, the return value would be (alpha, beta) 
+           If there are two arm links, the return value would be (alpha, beta)
         """
         return self.__armRelativeAngle
 
-    def getArmLimit(self):        
+    def getArmLimit(self):
         """This function returns (min angle, max angle) of all arm links
         """
         return self.__armLimit
@@ -86,7 +86,7 @@ class Arm:
         """
         return len(self.__armLinks)
 
-    def setArmAngle(self, angles):    
+    def setArmAngle(self, angles):
         """This function sets angles(alpha, beta, gamma) for all arm links
         """
         angles = angles[:self.getNumArmLinks()]

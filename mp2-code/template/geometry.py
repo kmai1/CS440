@@ -34,8 +34,8 @@ def computeCoordinate(start, length, angle):
     # print("angle", angle)
     # 0 0 is top left
     rads = math.radians(angle)
-    newX = start[0] + math.floor(length * np.cos(rads))
-    newY = start[1] - math.floor(length * np.sin(rads))
+    newX = start[0] + int(length * np.cos(rads))
+    newY = start[1] - int(length * np.sin(rads))
     answer = (newX, newY)
 
     return answer
@@ -59,7 +59,9 @@ def lineTouchCircle(startX, startY, endX, endY, circleX, circleY, radius):
 
     dx = x - circleX
     dy = y - circleY
+    # might have to round this
     dist = math.sqrt((dx ** 2) + (dy ** 2))
+    #print("distance", dist)
     return dist <= radius
 
 def doesArmTouchObjects(armPosDist, objects, isGoal=False):

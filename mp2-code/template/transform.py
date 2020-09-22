@@ -39,7 +39,6 @@ def transformToMaze(arm, goals, obstacles, window, granularity):
             Maze: the maze instance generated based on input arguments.
 
     """
-    if ()
     arm_alpha = arm.getArmAngle()[0]
     arm_beta = arm.getArmAngle()[1] # beta might be w respect to alpha
     arms_alpha_minmax = arm.getArmLimit()[0] # (min,max)
@@ -54,8 +53,7 @@ def transformToMaze(arm, goals, obstacles, window, granularity):
     firstArmLength = round(distance(firstArmStartEndPad[0], firstArmStartEndPad[1]))
     secondArmLength = round(distance(secondArmStartEndPad[0], secondArmStartEndPad[1]))
     # % are obstacles, . are goals
-    print("firstArmLength", firstArmLength)
-    print("secondArmLength", secondArmLength)
+
     for alpha in range(arms_alpha_minmax[0], arms_alpha_minmax[1] + 1, granularity):
         for beta in range(arms_beta_minmax[0], arms_beta_minmax[1] + 1, granularity):
             firstLinkEnd = computeCoordinate(firstArmStartEndPad[0], firstArmLength, alpha)

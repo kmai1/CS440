@@ -60,7 +60,7 @@ def lineTouchCircle(startX, startY, endX, endY, circleX, circleY, radius):
     dx = x - circleX
     dy = y - circleY
     # might have to round this
-    dist = math.sqrt((dx ** 2) + (dy ** 2))
+    dist = math.ceil(math.sqrt((dx ** 2) + (dy ** 2)))
     #print("distance", dist)
     return dist <= radius
 
@@ -124,10 +124,10 @@ def isArmWithinWindow(armPos, window):
         startPos = armLinks[0]
         endPos = armLinks[1]
         # check x y of start pos
-        if (startPos[0] < 0 or startPos[0] >= width or startPos[1] < 0 or startPos[1] >= height):
+        if (startPos[0] < 0 or startPos[0] > width or startPos[1] < 0 or startPos[1] > height):
             return False
         #check x y of end pos
-        if (endPos[0] < 0 or endPos[0] >= width or endPos[1] < 0 or endPos[1] >= height):
+        if (endPos[0] < 0 or endPos[0] > width or endPos[1] < 0 or endPos[1] > height):
             return False
     return True
 

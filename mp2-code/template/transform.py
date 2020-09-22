@@ -39,6 +39,7 @@ def transformToMaze(arm, goals, obstacles, window, granularity):
             Maze: the maze instance generated based on input arguments.
 
     """
+    if ()
     arm_alpha = arm.getArmAngle()[0]
     arm_beta = arm.getArmAngle()[1] # beta might be w respect to alpha
     arms_alpha_minmax = arm.getArmLimit()[0] # (min,max)
@@ -73,8 +74,8 @@ def transformToMaze(arm, goals, obstacles, window, granularity):
             if doesArmTouchObjects(armPosDist, obstacles, False):
                 maze[currentIndex[0]][currentIndex[1]] = "%"
                 continue
-            # if doesArmTipTouchGoals(secondLinkEnd, goals):
-            #     maze[currentIndex[0]][currentIndex[1]] = "."
+            if not isArmWithinWindow(armPos, window):
+                maze[currentIndex[0]][currentIndex[1]] = "%"
 
 
     startIndex = angleToIdx(arm.getArmAngle(),(arms_alpha_minmax[0], arms_beta_minmax[0]), granularity)

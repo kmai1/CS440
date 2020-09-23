@@ -39,6 +39,7 @@ def bfs(maze):
     This function returns optimal path in a list, which contains start and objective.
     If no path found, return None.
     """
+    print(maze.get_map())
     queue = []
     visited = []
     connections = {}

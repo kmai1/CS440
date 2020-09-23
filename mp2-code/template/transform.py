@@ -24,7 +24,37 @@ def distance(coord1, coord2):
     first = coord1[0] - coord2[0]
     second = coord1[1] - coord2[1]
     return math.sqrt(first ** 2 + second ** 2)
+def singleLink(arm, goals, obstacles, window, granularity):
+    arm_alpha = arm.getArmAngle()
+    arms_alpha_minmax = arm.getArmLimit()[0]
+    rows = math.floor((arms_alpha_minmax[1] - arms_alpha_minmax[0]) / granularity) + 1
 
+    maze = [" " for x in range(rows)]
+
+    armStartEndPad = arm.getArmPosDist()
+    armLength = round(distance(armStartEndPad[0][1], armStartEndPad[0][0]))
+
+    for alpha in range(arms_alpha_minmax[0], arms_alpha_minmax[1] + 1, granularity):
+        armEnd = computeCoordinate(armStartEndPad[0][0], armLength, alpha)
+        armPosDist = [(armStartEndPad[0][0], armEnd, armStartEndPad[0][2])]
+        #print(armPosDist)
+        currentIndex = angleToIdx([alpha], [arms_alpha_minmax[0]], granularity)
+        armPos = [(armStartEndPad[0][0], armEnd)]
+        if doesArmTipTouchGoals(armEnd, goals):
+            maze[currentIndex[0]] = "."
+            continue
+        if doesArmTouchObjects(armPosDist, obstacles, False):
+            maze[currentIndex[0]] = "%"
+            continue
+        if not isArmWithinWindow(armPos, window):
+            maze[currentIndex[0]] = "%"
+            continue
+
+    startIndex = angleToIdx(arm.getArmAngle(), [arms_alpha_minmax[0]], granularity)
+    maze[startIndex[0]] = "P"
+    print([arms_alpha_minmax[0]])
+    answer = Maze(maze, [arms_alpha_minmax[0]], granularity)
+    return answer
 def transformToMaze(arm, goals, obstacles, window, granularity):
     """This function transforms the given 2D map to the maze in MP1.
 
@@ -39,6 +69,10 @@ def transformToMaze(arm, goals, obstacles, window, granularity):
             Maze: the maze instance generated based on input arguments.
 
     """
+    if (arm.getNumArmLinks() == 1):
+        return singleLink(arm, goals, obstacles, window, granularity)
+    if (arm.getNumArmLinks() == 3):
+        return Maze([[[]]], 1, 1)
     arm_alpha = arm.getArmAngle()[0]
     arm_beta = arm.getArmAngle()[1] # beta might be w respect to alpha
     arms_alpha_minmax = arm.getArmLimit()[0] # (min,max)

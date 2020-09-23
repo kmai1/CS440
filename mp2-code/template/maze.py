@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to the University of Illinois at Urbana-Champaign
-# 
+#
 # Created by Michael Abir (abir2@illinois.edu) and
 #            Jongdeog Lee (jlee700@illinois.edu) on 09/12/2018
 """
@@ -25,6 +25,10 @@ class Maze:
         self.offsets = offsets
         self.granularity = granularity
 
+        if len(offsets) == 1:
+            self.maze = OneLinkMaze(input_map, offsets, granularity)
+            return
+            
         self.__dimensions = [len(input_map), len(input_map[0])]
         self.__map = input_map
         for x in range(self.__dimensions[ALPHA]):
@@ -99,6 +103,115 @@ class Maze:
             for alpha in range(self.__dimensions[0]):
                 outputMap += self.__map[alpha][beta]
             outputMap += "\n"
+
+        with open(filename, 'w') as f:
+            f.write(outputMap)
+
+        return True
+
+
+    def isValidPath(self, path):
+        # First, check whether it moves single hop
+        for i in range(1, len(path)):
+            prev = path[i-1]
+            cur = path[i]
+            dist = abs(prev[0]-cur[0]) + abs(prev[1]-cur[1])
+            if dist != self.granularity:
+                return "Not single hop"
+
+        # Second, check whether it is valid move
+        for pos in path:
+            if not self.isValidMove(pos[0], pos[1]):
+                return "Not valid move"
+
+
+        # Last, check whether it ends up at one of goals
+        if not path[-1] in self.__objective:
+            return "Last position is not a goal state"
+
+        return "Valid"
+
+    def get_map(self):
+        return self.__map
+
+
+class OneLinkMaze:
+    def __init__(self, input_map, offsets, granularity):
+        self.__start = None
+        self.__objective = []
+
+        self.offsets = offsets
+        self.granularity = granularity
+
+        self.__dimensions = [len(input_map)]
+        self.__map = input_map
+        for x in range(self.__dimensions[ALPHA]):
+            if self.__map[x] == START_CHAR:
+                self.__start = idxToAngle([x], self.offsets, self.granularity)
+            elif self.__map[x] == OBJECTIVE_CHAR:
+                self.__objective.append(idxToAngle([x], self.offsets, self.granularity))
+
+        if not self.__start:
+            print("Maze has no start")
+            raise SystemExit
+
+        if not self.__objective:
+            print("Maze has no objectives")
+            raise SystemExit
+
+    def getChar(self, alpha):
+        x = angleToIdx((alpha), self.offsets, self.granularity)
+        return self.__map[x]
+
+    # Returns True if the given position is the location of a wall
+    def isWall(self, alpha):
+        return self.getChar(alpha) == WALL_CHAR
+
+    # Rturns True if the given position is the location of an objective
+    def isObjective(self, alpha):
+        return self.getChar(alpha) == OBJECTIVE_CHAR
+
+    # Returns the start position as a tuple of (beta, column)
+    def getStart(self):
+        return self.__start
+
+    def setStart(self, start):
+        self.__start = start
+
+    # Returns the dimensions of the maze as a (beta, column) tuple
+    def getDimensions(self):
+        return self.__dimensions
+
+    # Returns the list of objective positions of the maze
+    def getObjectives(self):
+        return copy.deepcopy(self.__objective)
+
+    def setObjectives(self, objectives):
+        self.__objective = objectives
+
+    # Check if the agent can move into a specific beta and column
+    def isValidMove(self, alpha):
+        x = angleToIdx((alpha, beta), self.offsets, self.granularity)
+        return x >= 0 and x < self.getDimensions()[ALPHA] and \
+               not self.isWall(alpha, beta)
+
+    # Returns list of neighboing squares that can be moved to from the given beta,gamma
+    def getNeighbors(self, alpha):
+        possibleNeighbors = [
+            (alpha + self.granularity),
+            (alpha - self.granularity)
+        ]
+        neighbors = []
+        for a, b in possibleNeighbors:
+            if self.isValidMove(a,b):
+                neighbors.append((a,b))
+        return neighbors
+
+    def saveToFile(self, filename):
+        outputMap = ""
+        for alpha in range(self.__dimensions[0]):
+            outputMap += self.__map[alpha]
+        outputMap += "\n"
 
         with open(filename, 'w') as f:
             f.write(outputMap)

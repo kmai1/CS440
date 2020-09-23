@@ -60,7 +60,7 @@ def lineTouchCircle(startX, startY, endX, endY, circleX, circleY, radius):
     dx = x - circleX
     dy = y - circleY
     # might have to round this
-    dist = math.ceil(math.sqrt((dx ** 2) + (dy ** 2)))
+    dist = math.sqrt((dx ** 2) + (dy ** 2))
     #print("distance", dist)
     return dist <= radius
 

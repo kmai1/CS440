@@ -6,7 +6,7 @@
 # attribution to the University of Illinois at Urbana-Champaign
 #
 # Created by Justin Lizama (jlizama2@illinois.edu) on 09/28/2018
-
+import math
 """
 This is the main entry point for MP3. You should only modify code
 within this file and the last two arguments of line 34 in mp3.py
@@ -32,7 +32,81 @@ def naiveBayes(train_set, train_labels, dev_set, smoothing_parameter=1.0, pos_pr
     """
     # TODO: Write your code here
     # return predicted labels of development set
-    return []
+    predicted_labels = []
+    stop_words = ["ourselves", "hers", "between", "yourself", "but", "again", "there", "about", "once", "during", "out", "very", "having", "with", "they", "own", "an", "be", "some", "for", "do", "its", "yours", "such", "into", "of", "most", "itself", "other", "off", "is", "s", "am", "or", "who", "as", "from", "him", "each", "the", "themselves", "until", "below", "are", "we", "these", "your", "his", "through", "don", "nor", "me", "were", "her", "more", "himself", "this", "down", "should", "our", "their", "while", "above", "both", "up", "to", "ours", "had", "she", "all", "no", "when", "at", "any", "before", "them", "same", "and", "been", "have", "in", "will", "on", "does", "yourselves", "then", "that", "because", "what", "over", "why", "so", "can", "did", "not", "now", "under", "he", "you", "herself", "has", "just", "where", "too", "only", "myself", "which", "those", "i", "after", "few", "whom", "t", "being", "if", "theirs", "my", "against", "a", "by", "doing", "it", "how", "further", "was", "here", "than"]
+    posWords = {}
+    negWords = {}
+    # these two store every word
+    totalPosWords = 0
+    totalNegWords = 0
+    # these two store just the word, not how much each of it shows up
+    numOfPosWords = 0
+    numOfNegWords = 0
+    # laplace smoothing bigram_smoothing_parameter
+    alpha = 0.45
+    #creates the dictionary of frequency for wrods in pos/neg reviews on tset
+    for i in range(len(train_labels)):
+        if (train_labels[i] == 1):
+            for j in range(len(train_set[i])):
+                if (train_set[i][j] in stop_words):
+                    continue
+                totalPosWords += 1
+                working_word = train_set[i][j].lower()
+                if (working_word in posWords):
+                    posWords[working_word] = posWords[working_word] + 1
+                else:
+                    posWords[working_word] = 1
+        else:
+            for j in range(len(train_set[i])):
+                if (train_set[i][j] in stop_words):
+                    continue
+                totalNegWords += 1
+                working_word = train_set[i][j].lower()
+                if (working_word in negWords):
+                    negWords[working_word] = negWords[working_word] + 1
+                else:
+                    negWords[working_word] = 1
+    #dev set word
+    numOfPosWords = len(posWords)
+    numOfNegWords = len(negWords)
+    # these will update as we look at each review to make more accurate
+    # piazza 704
+    # naive bayes 4 at bottom, laplace smoothing, prob calcuation
+
+    for email in dev_set:
+        update_pos_prior = math.log(pos_prior)
+        update_neg_prior = math.log(1 - pos_prior)
+        for wordc in email:
+            word = wordc.lower()
+            #print(word)
+            countInPos = 0
+            countInNeg = 0
+            if (word in stop_words):
+                continue
+            if (word not in posWords):
+                numOfPosWords += 1
+                countInPos = 0
+            else :
+                countInPos = posWords[word]
+
+            if (word not in negWords):
+                numOfNegWords += 1
+                countInNeg = 0
+            else :
+                countInNeg = negWords[word]
+            # V + 1 = numOfPos/NegWords bc its already updated, no need to account for
+            pos_probability = math.log((countInPos + alpha) / (totalPosWords + (alpha * numOfPosWords)))
+            neg_probability = math.log((countInNeg + alpha) / (totalNegWords + (alpha * numOfNegWords)))
+
+            update_pos_prior += pos_probability
+            update_neg_prior += neg_probability
+
+        if (update_pos_prior > update_neg_prior):
+            predicted_labels.append(1)
+        else:
+            predicted_labels.append(0)
+    print(alpha)
+    return predicted_labels
 
 def bigramBayes(train_set, train_labels, dev_set, unigram_smoothing_parameter=1.0, bigram_smoothing_parameter=1.0, bigram_lambda=0.5,pos_prior=0.8):
     """
@@ -54,4 +128,5 @@ def bigramBayes(train_set, train_labels, dev_set, unigram_smoothing_parameter=1.
     """
     # TODO: Write your code here
     # return predicted labels of development set using a bigram model
-    return []
+
+    return naive_bayes(train_set, train_labels, dev_set, smoothing_parameter=1.0, pos_prior=0.8)

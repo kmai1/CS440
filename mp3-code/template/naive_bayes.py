@@ -34,8 +34,6 @@ def naiveBayes(train_set, train_labels, dev_set, smoothing_parameter=1.0, pos_pr
     # TODO: Write your code here
     # return predicted labels of development set
     predicted_labels = []
-    stop_words = ["ourselves", "hers", "between", "yourself", "but", "again", "there", "about", "once", "during", "out", "very", "having", "with", "they", "own", "an", "be", "some", "for", "do", "its", "yours", "such", "into", "of", "most", "itself", "other", "off", "is", "s", "am", "or", "who", "as", "from", "him", "each", "the", "themselves", "until", "below", "are", "we", "these", "your", "his", "through", "don", "nor", "me", "were", "her", "more", "himself", "this", "down", "should", "our", "their", "while", "above", "both", "up", "to", "ours", "had", "she", "all", "no", "when", "at", "any", "before", "them", "same", "and", "been", "have", "in", "will", "on", "does", "yourselves", "then", "that", "because", "what", "over", "why", "so", "can", "did", "not", "now", "under", "he", "you", "herself", "has", "just", "where", "too", "only", "myself", "which", "those", "i", "after", "few", "whom", "t", "being", "if", "theirs", "my", "against", "a", "by", "doing", "it", "how", "further", "was", "here", "than", "the", "br", "i" ,'just', 'herself', 'm', 'too', 'down', 'same', "shouldn't", 'no', 'because', "doesn't", 'ma', 't', "should've", 'ain', 'here', 'the', 'does', 'you', 'be', 've', 'y', 'mustn', 's', 'again', 'did', 'between', 'these', 'all', 'doesn', 'this', 'can', 'have', 'there', "couldn't", "needn't", "don't", 'shan', 'was', 'while', 'been', 'do', 'from', 'once', 'didn', 'its', 'for', 'is', "aren't", 'theirs', 'it', 'as', 'hadn', 'them', 'to', 'll', 'themselves', 'own', 'being', 'an', 'needn', 'in', 'your', 'yours', 'our', 'hers', 'they', 'but', 'with', 'of', "isn't", 'couldn', 'only', 'now', 'him', 'over', "you'd", 'hasn', "hadn't", "you'll", 'on', 'me', 'more', 'wasn', 'having', 'isn', "hasn't", 'itself', 'his', 'aren', 'and', 'which', 'above', "you're", 'into', 'those', 'd', 'we', 'before', 'both', "wasn't", 'she', 'few', "haven't", 'after', 'myself', 'not', 'so', 'by', 'am', 'most', 'were', 're', "it's", 'each', 'shouldn', 'out', 'than', 'some', 'her', 'are', 'against', 'through', 'when', 'such', 'haven', 'weren', 'had', 'where', 'himself', "she's", "didn't", "wouldn't", 'off', 'other', 'ours', 'then', "shan't", "won't", 'nor', 'mightn', "mustn't", 'during', 'at', 'ourselves', 'if', 'yourself', 'further', 'any', 'who', 'a', 'that', 'or', 'doing', 'o', 'below', 'why', 'wouldn', 'very', "you've", 'has', 'won', 'should', "weren't", 'whom', 'about', 'don', 'how', 'up', 'until', 'will', 'what', 'under', 'he', 'my', 'i', "that'll", 'yourselves', 'their', "mightn't"]
-
     posWords = {}
     negWords = {}
     # these two store every word
@@ -50,8 +48,6 @@ def naiveBayes(train_set, train_labels, dev_set, smoothing_parameter=1.0, pos_pr
     for i in range(len(train_labels)):
         if (train_labels[i] == 1):
             for j in range(len(train_set[i])):
-                # if (train_set[i][j].lower() in stop_words):
-                #     continue
                 totalPosWords += 1
                 working_word = train_set[i][j].lower()
                 if (working_word in posWords):
@@ -60,8 +56,6 @@ def naiveBayes(train_set, train_labels, dev_set, smoothing_parameter=1.0, pos_pr
                     posWords[working_word] = 1
         else:
             for j in range(len(train_set[i])):
-                # if (train_set[i][j].lower() in stop_words):
-                #     continue
                 totalNegWords += 1
                 working_word = train_set[i][j].lower()
                 if (working_word in negWords):
@@ -130,5 +124,71 @@ def bigramBayes(train_set, train_labels, dev_set, unigram_smoothing_parameter=1.
     """
     # TODO: Write your code here
     # return predicted labels of development set using a bigram model
+    # avg of unigram and bigram to find label
+    predicted_labels = []
+
+    #unigram
+    posWords = {}
+    negWords = {}
+    # these two store every word
+    totalPosWords = 0
+    totalNegWords = 0
+    # these two store just the word, not how much each of it shows up
+    numOfPosWords = 0
+    numOfNegWords = 0
+    # laplace smoothing bigram_smoothing_parameter
+
+    #creates the dictionary of frequency for wrods in pos/neg reviews on tset
+    for i in range(len(train_labels)):
+        if (train_labels[i] == 1):
+            for j in range(len(train_set[i])):
+                # if (train_set[i][j].lower() in stop_words):
+                #     continue
+                totalPosWords += 1
+                working_word = train_set[i][j].lower()
+                if (working_word in posWords):
+                    posWords[working_word] = posWords[working_word] + 1
+                else:
+                    posWords[working_word] = 1
+        else:
+            for j in range(len(train_set[i])):
+                # if (train_set[i][j].lower() in stop_words):
+                #     continue
+                totalNegWords += 1
+                working_word = train_set[i][j].lower()
+                if (working_word in negWords):
+                    negWords[working_word] = negWords[working_word] + 1
+                else:
+                    negWords[working_word] = 1
+    numOfPosWords = len(posWords)
+    numOfNegWords = len(negWords)
+
+    #bigram train using pairs?
+    posWordPairs = {}
+    negWordPairs = {}
+    totalPosWordsPair = {}
+    totalNegWordsPair = {}
+    numOfPosWordsPair = {}
+    numOfNegWordsPair = {}
+
+    for i in range(len(train_labels) - 1):
+        if (train_labels[i] == 1):
+            for j in range(len(train_set[i])):
+                totalPosWordsPair += 1
+                working_pair = (train_set[i][j].lower(), train_set[i][j+1].lower())
+                if (working_pair in posWordPairs):
+                    posWordPairs[working_pair] = posWordPairs[working_pair] + 1
+                else:
+                    posWordsPairs[working_pair] = 1
+        else:
+            for j in range(len(train_set[i])):
+                totalNegWordsPair += 1
+                working_pair = (train_set[i][j].lower(), train_set[i][j+1].lower())
+                if (working_pair in negWordPairs):
+                    negWordPairs[working_pair] = negWordPairs[working_pair] + 1
+                else:
+                    negWordPairs[working_pair] = 1
+    numOfPosWordsPair = len(posWordPairs)
+    numOfNegWordsPair = len(negWordPairs)
     
     return []

@@ -43,7 +43,7 @@ def naiveBayes(train_set, train_labels, dev_set, smoothing_parameter=1.0, pos_pr
     numOfPosWords = 0
     numOfNegWords = 0
     # laplace smoothing bigram_smoothing_parameter
-
+    counter = 0
     #creates the dictionary of frequency for wrods in pos/neg reviews on tset
     for i in range(len(train_labels)):
         if (train_labels[i] == 1):
@@ -77,8 +77,6 @@ def naiveBayes(train_set, train_labels, dev_set, smoothing_parameter=1.0, pos_pr
             #print(word)
             countInPos = 0
             countInNeg = 0
-            if (word in stop_words):
-                continue
             if (word not in posWords):
                 # numOfPosWords += 1
                 countInPos = 0
@@ -101,7 +99,6 @@ def naiveBayes(train_set, train_labels, dev_set, smoothing_parameter=1.0, pos_pr
             predicted_labels.append(1)
         else:
             predicted_labels.append(0)
-    print(smoothing_parameter)
     return predicted_labels
 
 def bigramBayes(train_set, train_labels, dev_set, unigram_smoothing_parameter=1.0, bigram_smoothing_parameter=1.0, bigram_lambda=0.5,pos_prior=0.8):
@@ -166,22 +163,22 @@ def bigramBayes(train_set, train_labels, dev_set, unigram_smoothing_parameter=1.
     #bigram train using pairs?
     posWordPairs = {}
     negWordPairs = {}
-    totalPosWordsPair = {}
-    totalNegWordsPair = {}
-    numOfPosWordsPair = {}
-    numOfNegWordsPair = {}
+    totalPosWordsPair = 0
+    totalNegWordsPair = 0
+    numOfPosWordsPair = 0
+    numOfNegWordsPair = 0
 
     for i in range(len(train_labels) - 1):
         if (train_labels[i] == 1):
-            for j in range(len(train_set[i])):
+            for j in range(len(train_set[i]) - 1):
                 totalPosWordsPair += 1
                 working_pair = (train_set[i][j].lower(), train_set[i][j+1].lower())
                 if (working_pair in posWordPairs):
                     posWordPairs[working_pair] = posWordPairs[working_pair] + 1
                 else:
-                    posWordsPairs[working_pair] = 1
+                    posWordPairs[working_pair] = 1
         else:
-            for j in range(len(train_set[i])):
+            for j in range(len(train_set[i]) - 1):
                 totalNegWordsPair += 1
                 working_pair = (train_set[i][j].lower(), train_set[i][j+1].lower())
                 if (working_pair in negWordPairs):
@@ -190,5 +187,57 @@ def bigramBayes(train_set, train_labels, dev_set, unigram_smoothing_parameter=1.
                     negWordPairs[working_pair] = 1
     numOfPosWordsPair = len(posWordPairs)
     numOfNegWordsPair = len(negWordPairs)
-    
-    return []
+
+    for emails in dev_set:
+        update_pos_prior = math.log(pos_prior)
+        update_neg_prior = math.log((1 - pos_prior))
+        for i in range(len(emails) - 1):
+            first = emails[i]
+            second = emails[i + 1]
+            pos_probability = 0
+            neg_probability = 0
+            pair = (first, second)
+            if (pair not in posWordPairs):
+                # numOfPosWords += 1
+                countInPosPair = 0
+            else:
+                countInPosPair = posWordPairs[pair]
+
+            if (pair not in negWordPairs):
+                # numOfNegWords += 1
+                countInNegPair = 0
+            else:
+                countInNegPair = negWordPairs[pair]
+
+
+            if (pair in posWordPairs):
+                pos_probability = math.log((countInPosPair + bigram_smoothing_parameter) / (totalPosWordsPair + (bigram_smoothing_parameter * (numOfPosWordsPair + 1))))
+            else:
+                if (first not in posWords):
+                    pos_probability += math.log(unigram_smoothing_parameter / (totalPosWords + (unigram_smoothing_parameter * (numOfPosWords + 1))))
+                else:
+                    pos_probability += math.log((posWords[first] + unigram_smoothing_parameter) / (totalPosWords + (unigram_smoothing_parameter * (numOfPosWords + 1))))
+                if (second not in posWords):
+                    pos_probability += math.log(unigram_smoothing_parameter / (totalPosWords + (unigram_smoothing_parameter * (numOfPosWords + 1))))
+                else:
+                    pos_probability += math.log((posWords[second] + unigram_smoothing_parameter) / (totalPosWords + (unigram_smoothing_parameter * (numOfPosWords + 1))))
+
+            if (pair in negWordPairs):
+                neg_probability = math.log((countInNegPair + bigram_smoothing_parameter) / (totalNegWordsPair + (bigram_smoothing_parameter * (numOfNegWordsPair + 1))))
+            else:
+                if (first not in negWords):
+                    neg_probability += math.log(unigram_smoothing_parameter / (totalNegWords + (unigram_smoothing_parameter * (numOfNegWords + 1))))
+                else:
+                    neg_probability += math.log((negWords[first] + unigram_smoothing_parameter) / (totalNegWords + (unigram_smoothing_parameter * (numOfNegWords + 1))))
+                if (second not in negWords):
+                    neg_probability += math.log(unigram_smoothing_parameter / (totalNegWords + (unigram_smoothing_parameter * (numOfNegWords + 1))))
+                else:
+                    neg_probability += math.log((negWords[second] + unigram_smoothing_parameter) / (totalNegWords + (unigram_smoothing_parameter * (numOfNegWords + 1))))
+            update_pos_prior += pos_probability
+            update_neg_prior += neg_probability
+
+        if (update_pos_prior > update_neg_prior):
+            predicted_labels.append(1)
+        else:
+            predicted_labels.append(0)
+    return predicted_labels

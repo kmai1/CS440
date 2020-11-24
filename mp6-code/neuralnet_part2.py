@@ -28,14 +28,29 @@ class NeuralNet(torch.nn.Module):
             @return l(x,y) an () tensor that is the mean loss
         @param in_size: Dimension of input
         @param out_size: Dimension of output
-
-
-
-
         """
+
+        # REFERENCE : https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
         super(NeuralNet, self).__init__()
         self.loss_fn = loss_fn
-
+        # CAN CHANGE 32 to 64 128 etc if need higher acc
+        # self.model = torch.nn.Sequential(
+        #     torch.nn.Conv2d(3, 6, 5),
+        #     torch.nn.ReLU(),
+        #     torch.nn.Conv2d(6, 16, 5)
+        # )
+        self.conv1 = torch.nn.Conv2d(3, 6, 5)
+        self.pool = torch.nn.MaxPool2d(2, 2)
+        self.conv2 = torch.nn.Conv2d(6, 16, 5)
+        self.fc1 = torch.nn.Linear(16 * 5 * 5, 120)
+        self.fc2 = torch.nn.Linear(120, 84)
+        self.fc3 = torch.nn.Linear(84, 2)
+        # optimizer !?!?!
+        #
+        # torch.nn.Sequential(
+        #
+        # ) # SGD hasb etter results than adam?
+        self.optimizer = torch.optim.SGD(self.parameters(), lr=lrate, momentum = 0.9)
 
     def forward(self, x):
         """ A forward pass of your neural net (evaluates f(x)).
@@ -44,7 +59,26 @@ class NeuralNet(torch.nn.Module):
 
         @return y: an (N, out_size) torch tensor of output from the network
         """
-        return torch.ones(x.shape[0], 1)
+        # print(self.model)
+        x = x.view(-1,3,32,32)
+        # print(x.size())
+        # x = self.conv1(x)
+        # print(x.size())
+        # x = torch.nn.functional.relu(x)
+        # print(x.size())
+        # x = self.pool(x)
+        x = self.pool(torch.nn.functional.relu(self.conv1(x)))
+        # print(x.size())
+        x = self.pool(torch.nn.functional.relu(self.conv2(x)))
+        x = x.view(-1, 16 * 5 * 5)
+        x = torch.nn.functional.relu(self.fc1(x))
+        # print("error")
+        x = torch.nn.functional.relu(self.fc2(x))
+        # print("here")
+        x = self.fc3(x)
+        # print("here")
+        return x
+
 
     def step(self, x,y):
         """
@@ -53,7 +87,18 @@ class NeuralNet(torch.nn.Module):
         @param y: an (N,) torch tensor
         @return L: total empirical risk (mean of losses) at this time step as a float
         """
-        return 0.0
+        # clear grad
+        self.optimizer.zero_grad()
+
+        pred_y = self.forward(x)
+
+        #loss of this
+        loss = self.loss_fn(pred_y, y)
+        loss.backward()
+        # might need .backward
+        self.optimizer.step()
+
+        return loss
 
 
 
@@ -78,4 +123,31 @@ def fit(train_set,train_labels,dev_set,n_iter,batch_size=100):
     model's performance could be sensitive to the choice of learning_rate. We recommend trying different values in case
     your first choice does not seem to work well.
     """
-    return [],[],None
+    # standaridze data?? formuka = phi = (x - mu) / sigma
+    train_set = (train_set - train_set.mean()) / train_set.std()
+    dev_set = (dev_set - dev_set.mean())/ dev_set.std() #maybe its train_set.mean() and train_set.std()
+
+
+    learning_rate = 0.04 # can try 0.0001 as well
+    loss_fn = torch.nn.CrossEntropyLoss()
+    in_size = len(train_set[0])
+    out_size = 2 # 2 labels?
+
+    # train_set = train_set.view(100, 3, 32, 32)
+    # dev_set = train_set.view(100, 3, 32, 32)
+
+    net = NeuralNet(learning_rate, loss_fn, in_size, out_size)
+
+    #return stuff
+    losses = []
+    for x in range(80): # try hard coding n_iter teo 40 50 60 ... maybe increate acc
+        #step train set
+        print(x)
+        loss_to_add = net.step(train_set, train_labels)
+        losses.append(loss_to_add)
+
+    out = net(dev_set)
+    best_index = torch.argmax(out, 1)
+    yhats = np.array(best_index)
+
+    return losses, yhats, net

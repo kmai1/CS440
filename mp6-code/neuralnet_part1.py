@@ -37,8 +37,18 @@ class NeuralNet(torch.nn.Module):
         """
         super(NeuralNet, self).__init__()
         self.loss_fn = loss_fn
-
-
+        # CAN CHANGE 32 to 64 128 etc if need higher acc
+        self.model = torch.nn.Sequential(
+            torch.nn.Linear(in_size, 128), #input layer
+            torch.nn.ReLU(), # activation fn
+            torch.nn.Linear(128, out_size), #output later
+        )
+        # optimizer !?!?!
+        #
+        # torch.nn.Sequential(
+        #
+        # ) # SGD hasb etter results than adam?
+        self.optimizer = torch.optim.SGD(self.parameters(), lr=lrate, momentum = 0.9)
 
 
     def forward(self, x):
@@ -48,7 +58,10 @@ class NeuralNet(torch.nn.Module):
 
         @return y: an (N, out_size) torch tensor of output from the network
         """
-        return torch.ones(x.shape[0], 1)
+
+        return self.model(x)
+        # #what is this?
+        # return torch.ones(x.shape[0], 1)
 
     def step(self, x,y):
         """
@@ -57,7 +70,18 @@ class NeuralNet(torch.nn.Module):
         @param y: an (N,) torch tensor
         @return L: total empirical risk (mean of losses) at this time step as a float
         """
-        return 0.0
+        # clear grad
+        self.optimizer.zero_grad()
+
+        pred_y = self.forward(x)
+
+        #loss of this
+        loss = self.loss_fn(pred_y, y)
+        loss.backward()
+        # might need .backward
+        self.optimizer.step()
+
+        return loss
 
 
 def fit(train_set,train_labels,dev_set,n_iter,batch_size=100):
@@ -78,4 +102,26 @@ def fit(train_set,train_labels,dev_set,n_iter,batch_size=100):
 
     # NOTE: This must work for arbitrary M and N
     """
-    return [],[],None
+    # standaridze data?? formuka = phi = (x - mu) / sigma
+    train_set = (train_set - train_set.mean()) / train_set.std()
+    dev_set = (dev_set - dev_set.mean())/ dev_set.std() #maybe its train_set.mean() and train_set.std()
+
+
+    learning_rate = 0.01 # can try 0.0001 as well
+    loss_fn = torch.nn.CrossEntropyLoss()
+    in_size = len(train_set[0])
+    out_size = 2 # 2 labels?
+    net = NeuralNet(learning_rate, loss_fn, in_size, out_size)
+
+    #return stuff
+    losses = []
+
+    for x in range(n_iter):
+        #step train set
+        loss_to_add = net.step(train_set, train_labels)
+        losses.append(loss_to_add)
+    out = net(dev_set)
+    best_index = torch.argmax(out, 1)
+    yhats = np.array(best_index)
+
+    return losses, yhats, net

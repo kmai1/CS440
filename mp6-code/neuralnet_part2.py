@@ -61,12 +61,6 @@ class NeuralNet(torch.nn.Module):
         """
         # print(self.model)
         x = x.view(-1,3,32,32)
-        # print(x.size())
-        # x = self.conv1(x)
-        # print(x.size())
-        # x = torch.nn.functional.relu(x)
-        # print(x.size())
-        # x = self.pool(x)
         x = self.pool(torch.nn.functional.relu(self.conv1(x)))
         # print(x.size())
         x = self.pool(torch.nn.functional.relu(self.conv2(x)))
